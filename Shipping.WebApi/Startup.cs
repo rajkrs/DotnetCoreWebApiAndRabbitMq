@@ -30,26 +30,15 @@ namespace Shipping.WebApi
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            //register option monitor from json config
             services.Configure<RabbitMQConfigurations>(Configuration.GetSection("RabbitMQ"));
-            services.AddSingleton(s => s.GetRequiredService<IOptionsMonitor<RabbitMQConfigurations>>().CurrentValue);
+            //Add custom rabbitmq service 
+            services.AddMqService(GetType().Assembly.FullName);
 
-            services.AddSingleton<IRabbitMQPersistentConnection>(s =>
-            {
-                var configurations = s.GetRequiredService<IOptionsMonitor<RabbitMQConfigurations>>().CurrentValue;
-                var factory = new ConnectionFactory()
-                {
-                    HostName = configurations.HostName,
-                    Port = configurations.Port,
-                    UserName = configurations.UserName,
-                    Password = configurations.Password
-                };
-                var logger = s.GetRequiredService<ILogger<RabbitMQPersistentConnection>>();
-                var serviceProvider = s.GetRequiredService<IServiceProvider>();
-                return new RabbitMQPersistentConnection(serviceProvider, factory, logger, GetType().Assembly.FullName);
-            });
-
+            //Add publisher
             services.AddSingleton<IMqPublisher, MqPublisher>();
 
+            //Add event and respective handler for consumer.
             services.AddSingleton<ConsumerCollection>(new ConsumerCollection()
                 .Add(typeof(ShippingReqEvent), typeof(ShippingRequestHandler))
                 );
