@@ -1,4 +1,6 @@
 ﻿using MessageQ;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Shipping.WebApi.Consumer.Events;
 using Shipping.WebApi.Publish.Order;
 using System;
@@ -22,7 +24,12 @@ namespace Shipping.WebApi.Consumer.EventHandlers
 
         public Task Handle(ShippingReqEvent @event)
         {
-            mqPublisher.PublishAsync( new OrderStausChangeEvent { OrderId = @event.OrderId, Status = "Dispatch" });
+
+            using (IServiceScope scope = _serviceProvider.CreateScope()) {
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<ShippingRequestHandler>>();
+                mqPublisher.PublishAsync(new OrderStausChangeEvent { OrderId = @event.OrderId, Status = "Dispatch" });
+
+            }
 
             return Task.CompletedTask;
         }
