@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MessageQ
 {
-   
+
     public class Event
     {
         public Event()
